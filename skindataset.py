@@ -37,7 +37,8 @@ def init_state(img):
         "img": img,
         "target": target,
         "overlay": overlay,
-        "state": 'selection'
+        "state": 'selection',
+        "type": 'skin'
     }
 
     cv2.setMouseCallback('selection', draw_roi(state))
@@ -70,7 +71,7 @@ def create_histogram(neighbour):
 
     for i in range(len(neighbour)):
         for j in range(len(neighbour[i])):
-            value = int(np.round(neighbour[i, j] / 4))
+            value = int(np.floor(neighbour[i, j] / 4))
             histogram[value] = histogram[value] + 1
 
     return np.array(list(histogram.values()))/total_values
@@ -114,12 +115,16 @@ def extract_features(image, target):
 def save_features(path, features, type):
     cols = ["huehist_{}".format(i) for i in range(0,64)] + ["saturationhist_{}".format(i) for i in range(0,64)] + ['R_Avg', 'G_Avg', 'B_Avg']
     df = pd.DataFrame(features, columns = cols)
-    df.assign(type=type)
-    df.to_csv(path)
+    df = df.assign(type=type)
+    df.to_csv(path, mode='a')
+
 
 def save_changes(state, type):
     features = extract_features(state['img'], state['target'])
     save_features(feature_path, features, type)
+    state['state'] = 'selection'
+    state['target'] = np.zeros(state['img'].shape)
+    return state
 
 
 def wait_opencv(state):
@@ -131,8 +136,13 @@ def wait_opencv(state):
         if k == ord('c'):
             state = capture(state)
         elif k == ord('s'):
-            save_changes(state, 'skin')
-            break
+            state = save_changes(state, state['type'])
+
+            if state['type'] == 'skin':
+                state['type'] = 'other'
+            else:
+                break
+
         elif k == 27:
             break
 

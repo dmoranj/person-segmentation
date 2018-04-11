@@ -60,8 +60,21 @@ def capture(state):
     return state
 
 
+def compute_features_for_neighbourhood():
+
+
+
+def extract_features(state['img'], state['target']):
+
+
+
+def save_features():
+
+
+
 def save_changes(state):
-    print('Saving')
+    features = extract_features(state['img'], state['target'])
+    save_features(featurePath, features)
 
 
 def wait_opencv(state):

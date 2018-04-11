@@ -1,9 +1,11 @@
 import cv2
 import numpy as np
+import pandas as pd
 
 drawing = False
 ix, iy = -1, -1
-
+feature_path = './results/features.csv'
+neighbour_radius = 3
 
 def draw_roi(state):
     def handler(event, x, y, flags, param):
@@ -60,21 +62,64 @@ def capture(state):
     return state
 
 
-def compute_features_for_neighbourhood():
+def create_histogram(neighbour):
+    indexes = range(0, 64)
+    content = [0] * 64
+    histogram = dict(zip(indexes, content))
+    total_values = (2*neighbour_radius + 1)**2
+
+    for i in range(len(neighbour)):
+        for j in range(len(neighbour[i])):
+            value = int(np.round(neighbour[i, j] / 4))
+            histogram[value] = histogram[value] + 1
+
+    return np.array(list(histogram.values()))/total_values
 
 
-
-def extract_features(state['img'], state['target']):
-
-
-
-def save_features():
+def average_neighbour(neighbour):
+    return np.average(neighbour, (0, 1))/255
 
 
+def create_features(hue_hist, satur_hist, rgb_avg):
+    return list(hue_hist) + list(satur_hist) + list(rgb_avg)
 
-def save_changes(state):
+
+def compute_features_for_neighbourhood(rgb_neighbour, hsv_neighbour):
+    hue_histogram = create_histogram(hsv_neighbour[:, :, 0])
+    saturation_histogram = create_histogram(hsv_neighbour[:, :, 1])
+    rgb_avg = average_neighbour(rgb_neighbour)
+
+    return create_features(hue_histogram, saturation_histogram, rgb_avg)
+
+
+def extract_features(image, target):
+    features = []
+
+    rows, columns, channels = target.shape
+    hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    target = cv2.cvtColor(target.astype(np.uint8), cv2.COLOR_BGR2GRAY)
+
+    for i in range(neighbour_radius, rows - neighbour_radius):
+        for j in range(neighbour_radius, columns - neighbour_radius):
+            if target[i, j] > 0:
+                rgb_neighbour = image[(i - neighbour_radius):(i + neighbour_radius + 1), (j - neighbour_radius):(j + neighbour_radius + 1), :]
+                hsv_neighbour = hsv_image[(i - neighbour_radius):(i + neighbour_radius + 1), (j - neighbour_radius):(j + neighbour_radius + 1), :]
+
+                feature = compute_features_for_neighbourhood(rgb_neighbour, hsv_neighbour)
+                features.append(feature)
+
+    return features
+
+
+def save_features(path, features, type):
+    cols = ["huehist_{}".format(i) for i in range(0,64)] + ["saturationhist_{}".format(i) for i in range(0,64)] + ['R_Avg', 'G_Avg', 'B_Avg']
+    df = pd.DataFrame(features, columns = cols)
+    df.assign(type=type)
+    df.to_csv(path)
+
+def save_changes(state, type):
     features = extract_features(state['img'], state['target'])
-    save_features(featurePath, features)
+    save_features(feature_path, features, type)
 
 
 def wait_opencv(state):
@@ -86,7 +131,7 @@ def wait_opencv(state):
         if k == ord('c'):
             state = capture(state)
         elif k == ord('s'):
-            save_changes(state)
+            save_changes(state, 'skin')
             break
         elif k == 27:
             break

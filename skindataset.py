@@ -56,6 +56,7 @@ def show_images(state):
 
 
 def capture(state):
+    print('Capturing data...\n')
     mask = cv2.cvtColor(state['target'].astype(np.uint8), cv2.COLOR_BGR2GRAY)
     capture = cv2.bitwise_and(state['img'], state['img'], mask=mask)
     state['capture'] = capture.astype(np.uint8)
@@ -116,10 +117,11 @@ def save_features(path, features, type):
     cols = ["huehist_{}".format(i) for i in range(0,64)] + ["saturationhist_{}".format(i) for i in range(0,64)] + ['R_Avg', 'G_Avg', 'B_Avg']
     df = pd.DataFrame(features, columns = cols)
     df = df.assign(type=type)
-    df.to_csv(path, mode='a')
+    df.to_csv(path, mode='a', header=False)
 
 
 def save_changes(state, type):
+    print('Saving changes...\n')
     features = extract_features(state['img'], state['target'])
     save_features(feature_path, features, type)
     state['state'] = 'selection'
@@ -155,4 +157,4 @@ def process_image(path):
     wait_opencv(state)
 
 
-process_image('../examples/gente.jpg')
+process_image('../examples/gente4.jpg')

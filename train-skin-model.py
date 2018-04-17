@@ -5,9 +5,17 @@ from sklearn.externals import joblib
 from sklearn.metrics import classification_report
 
 
-def load_data(path):
+def load_data(dataset_paths):
     print('Loading and parsing data...')
-    dataset = pd.read_csv(path)
+
+    partial_datasets = []
+
+    for path in dataset_paths:
+        print('Loading [{}]'.format(path))
+        partial_datasets.append(pd.read_csv(path))
+
+    dataset = pd.concat(partial_datasets).sample(frac=1)
+
     return dataset.drop(['Unnamed: 0', 'type'], axis=1), dataset['type']
 
 
@@ -31,8 +39,8 @@ def save_model(model, model_path):
     joblib.dump(model, model_path)
 
 
-def train_skin_model(dataset_path, model_path):
-    dataset_X, dataset_y = load_data(dataset_path)
+def train_skin_model(dataset_paths, model_path):
+    dataset_X, dataset_y = load_data(dataset_paths)
     X_train, X_test, y_train, y_test = train_test_split(dataset_X, dataset_y, test_size=0.2, random_state=42)
 
     model = train_model(X_train, y_train)
@@ -41,4 +49,4 @@ def train_skin_model(dataset_path, model_path):
     save_model(model, model_path)
 
 
-train_skin_model('./results/features_1.csv', './results/skin_model.pk1')
+train_skin_model(['./results/features_1.csv', './results/features_2.csv', './results/features_3.csv'], './results/skin_model2.pk1')

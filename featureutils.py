@@ -1,5 +1,6 @@
 import numpy as np
 from constants import *
+import cv2
 
 
 def average_neighbour(neighbour):
@@ -32,3 +33,20 @@ def compute_features_for_neighbourhood(rgb_neighbour, hsv_neighbour):
     return create_features(hue_histogram, saturation_histogram, rgb_avg)
 
 
+def extract_features(image):
+    features = []
+    rows, columns, channels = image.shape
+    hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+    for i in range(neighbour_radius, rows - neighbour_radius):
+        if i%50 == 0:
+            print('Iteration {}'.format(i))
+
+        for j in range(neighbour_radius, columns - neighbour_radius):
+            rgb_neighbour = image[(i - neighbour_radius):(i + neighbour_radius + 1), (j - neighbour_radius):(j + neighbour_radius + 1), :]
+            hsv_neighbour = hsv_image[(i - neighbour_radius):(i + neighbour_radius + 1), (j - neighbour_radius):(j + neighbour_radius + 1), :]
+
+            feature = compute_features_for_neighbourhood(rgb_neighbour, hsv_neighbour)
+            features.append(feature)
+
+    return features

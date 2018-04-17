@@ -1,7 +1,7 @@
 import cv2
 from constants import *
 import numpy as np
-from featureutils import compute_features_for_neighbourhood
+from featureutils import compute_features_for_neighbourhood, extract_features
 from sklearn.externals import joblib
 
 
@@ -30,21 +30,7 @@ def filter_with_prediction(image, prediction):
 def extract(image, model):
     print('Extracting image')
 
-    features = []
-    rows, columns, channels = image.shape
-    hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-
-    for i in range(neighbour_radius, rows - neighbour_radius):
-        if i%50 == 0:
-            print('Iteration {}'.format(i))
-
-        for j in range(neighbour_radius, columns - neighbour_radius):
-            rgb_neighbour = image[(i - neighbour_radius):(i + neighbour_radius + 1), (j - neighbour_radius):(j + neighbour_radius + 1), :]
-            hsv_neighbour = hsv_image[(i - neighbour_radius):(i + neighbour_radius + 1), (j - neighbour_radius):(j + neighbour_radius + 1), :]
-
-            feature = compute_features_for_neighbourhood(rgb_neighbour, hsv_neighbour)
-            features.append(feature)
-
+    features = extract_features(image)
     prediction = predict_pixels(features, model)
 
     return filter_with_prediction(image, prediction)
@@ -78,4 +64,4 @@ def extract_skin(image_path, model_path):
     show_image(skin)
 
 
-extract_skin('../examples/gente.jpg', './results/skin_model.pk1')
+extract_skin('../examples/gente2.jpg', './results/skin_model.pk1')

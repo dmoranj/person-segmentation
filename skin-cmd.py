@@ -60,7 +60,7 @@ def start():
     elif args.action == 'train':
         tsm.train_skin_model(list_from_folder(args.inputFolder, '*.csv'), args.modelPath)
     elif args.action == 'extract':
-        es.extract_skins(list_from_folder(args.inputFolder, '*.jpg'), args.modelPath)
+        es.extract_skins(list_from_folder(args.inputFolder, '*.jpg'), args.modelPath, args.outputFolder)
     else:
         print('Action not found\n')
 

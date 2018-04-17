@@ -1,9 +1,10 @@
 import cv2
 from constants import *
 import numpy as np
-from featureutils import compute_features_for_neighbourhood, extract_features
+from featureutils import extract_features, extract_filename
 from sklearn.externals import joblib
-
+import matplotlib.image as mpimg
+import os
 
 def predict_pixels(feature, model):
     print('Predicting pixels')
@@ -24,7 +25,7 @@ def filter_with_prediction(image, prediction):
     image_center = image[neighbour_radius:(height- neighbour_radius), neighbour_radius:(width - neighbour_radius), :]
     filtered = cv2.bitwise_and(image_center, image_center, mask=selector)
 
-    return filtered
+    return filtered, selector
 
 
 def extract(image, model):
@@ -33,7 +34,8 @@ def extract(image, model):
     features = extract_features(image)
     prediction = predict_pixels(features, model)
 
-    return filter_with_prediction(image, prediction)
+    filtered, mask = filter_with_prediction(image, prediction)
+    return filtered, mask
 
 
 def load_image(image_path):
@@ -45,25 +47,23 @@ def load_model(model_path):
     return joblib.load(model_path)
 
 
-def show_image(skin):
-    cv2.imshow('selection', skin)
+def save_image(skin, mask, img_path, output):
+    skin_filename = os.path.join(output, extract_filename(img_path) + '_skin.png')
+    mpimg.imsave(skin_filename, skin)
 
-    while(1):
-        k = cv2.waitKey(1) & 0xFF
-        if k == 27:
-            break
-
-    cv2.destroyAllWindows()
+    mask_filename = os.path.join(output, extract_filename(img_path) + '_mask.png')
+    mpimg.imsave(mask_filename, mask)
 
 
-def extract_skin(image_path, model_path):
+def extract_skin(image_path, model_path, output_path):
     img = load_image(image_path)
     model = load_model(model_path)
 
-    skin = extract(img, model)
-    show_image(skin)
+    skin, mask = extract(img, model)
+    save_image(skin, mask, image_path, output_path)
 
-def extract_skins(image_paths, model_path):
+
+def extract_skins(image_paths, model_path, output_path):
     for path in image_paths:
-        extract_skin(path, model_path)
+        extract_skin(path, model_path, output_path)
 

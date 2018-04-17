@@ -2,11 +2,11 @@ import cv2
 import numpy as np
 import pandas as pd
 from constants import *
-from featureutils import compute_features_for_neighbourhood
+from featureutils import compute_features_for_neighbourhood, extract_filename
+import os
 
 drawing = False
 ix, iy = -1, -1
-feature_path = './results/features.csv'
 
 
 def draw_roi(state):
@@ -30,7 +30,7 @@ def draw_roi(state):
     return handler
 
 
-def init_state(img):
+def init_state(img, output_path):
     target = np.zeros(img.shape)
     overlay = np.zeros(img.shape)
     cv2.namedWindow('selection')
@@ -40,6 +40,7 @@ def init_state(img):
         "target": target,
         "overlay": overlay,
         "state": 'selection',
+        "output_path": output_path,
         "type": 'skin'
     }
 
@@ -95,14 +96,13 @@ def save_features(path, features, type):
 def save_changes(state, type):
     print('Saving changes...\n')
     features = extract_features(state['img'], state['target'])
-    save_features(feature_path, features, type)
+    save_features(state['output_path'], features, type)
     state['state'] = 'selection'
     state['target'] = np.zeros(state['img'].shape)
     return state
 
 
 def wait_opencv(state):
-
     while(1):
         show_images(state)
         k = cv2.waitKey(1) & 0xFF
@@ -123,10 +123,20 @@ def wait_opencv(state):
     cv2.destroyAllWindows()
 
 
-def process_image(path):
+def create_target_path(output, path):
+    filename = extract_filename(path)
+    name = filename + ".csv"
+
+    return os.path.join(output, name)
+
+
+def process_image(path, output):
     img = cv2.imread(path)
-    state = init_state(img)
+    target_path = create_target_path(output, path)
+    state = init_state(img, target_path)
     wait_opencv(state)
 
 
-process_image('../examples/gente4.jpg')
+def process_images(path_list, output):
+    for path in path_list:
+        process_image(path, output)

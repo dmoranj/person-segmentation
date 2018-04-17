@@ -63,5 +63,7 @@ def extract_skin(image_path, model_path):
     skin = extract(img, model)
     show_image(skin)
 
+def extract_skins(image_paths, model_path):
+    for path in image_paths:
+        extract_skin(path, model_path)
 
-extract_skin('../examples/gente2.jpg', './results/skin_model.pk1')

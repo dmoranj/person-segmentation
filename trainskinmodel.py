@@ -12,11 +12,11 @@ def load_data(dataset_paths):
 
     for path in dataset_paths:
         print('Loading [{}]'.format(path))
-        partial_datasets.append(pd.read_csv(path))
+        partial_datasets.append(pd.read_csv(path, header=None))
 
     dataset = pd.concat(partial_datasets).sample(frac=1)
 
-    return dataset.drop(['Unnamed: 0', 'type'], axis=1), dataset['type']
+    return dataset.drop([0, 132], axis=1), dataset[132]
 
 
 def train_model(X, y):
@@ -49,4 +49,3 @@ def train_skin_model(dataset_paths, model_path):
     save_model(model, model_path)
 
 
-train_skin_model(['./results/features_1.csv', './results/features_2.csv', './results/features_3.csv'], './results/skin_model2.pk1')

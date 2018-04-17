@@ -50,3 +50,10 @@ def extract_features(image):
             features.append(feature)
 
     return features
+
+
+def extract_filename(path):
+    filename = path.split("/")[-1]
+    name = filename.split('.')[0]
+
+    return name
